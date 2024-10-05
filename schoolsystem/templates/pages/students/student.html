@@ -1,0 +1,555 @@
+{% extends 'include/layout.html' %} {% block content %}
+
+<div class="container-fluid mt-4">
+  <h1 class="text-center">Students List</h1>
+  <div class="flex items-center">
+    <input
+      type="text"
+      id="search"
+      placeholder="Search students..."
+      class="mb-3 w-full max-w-xs p-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out"
+    />
+    <!-- Add Student Button -->
+    <button
+      type="button"
+      class="btn btn-primary mb-3"
+      data-bs-toggle="modal"
+      data-bs-target="#addStudentModal"
+    >
+      Add Student
+      <span
+        class="spinner-border spinner-border-sm d-none"
+        id="addStudentSpinner"
+        role="status"
+        aria-hidden="true"
+      ></span>
+    </button>
+  </div>
+
+  <!-- Students Table -->
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead class="table-dark text-center">
+        <tr>
+          <th>Full Name</th>
+          <th>DOB</th>
+          <th>Residence</th>
+          <th>Parent Info</th>
+          <th>Grade</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in students %}
+        <tr class="text-center">
+          <td>{{ student.full_name }}</td>
+          <td>{{ student.dob }}</td>
+          <td>{{ student.residence }}</td>
+          <td>{{ student.parent_info }}</td>
+          <td>{{ student.grade }}</td>
+          <td>
+            <!-- Edit Button -->
+            <button
+              type="button"
+              class="btn btn-warning btn-sm"
+              data-bs-toggle="modal"
+              data-bs-target="#editStudentModal{{ student.id }}"
+            >
+              Edit
+            </button>
+            <!-- Delete Button -->
+            <button
+              type="button"
+              class="btn btn-danger btn-sm"
+              data-bs-toggle="modal"
+              data-bs-target="#deleteStudentModal{{ student.id }}"
+            >
+              Delete
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Student Modal -->
+<div
+  class="modal fade"
+  id="addStudentModal"
+  tabindex="-1"
+  aria-labelledby="addStudentModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addStudentModalLabel">Add Student</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form id="addStudentForm">
+          {% csrf_token %}
+
+          <!-- Step 1 - Personal Information -->
+          <div class="wizard-step" id="step1">
+            <h5>Step 1: Personal Information</h5>
+            <div class="mb-3">
+              <label for="firstName" class="form-label">First Name</label>
+              <input
+                type="text"
+                class="form-control"
+                id="firstName"
+                name="firstName"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="lastName" class="form-label">Last Name</label>
+              <input
+                type="text"
+                class="form-control"
+                id="lastName"
+                name="lastName"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="otherNames" class="form-label">Other Names</label>
+              <input
+                type="text"
+                class="form-control"
+                id="otherNames"
+                name="otherNames"
+              />
+            </div>
+            <div class="mb-3">
+              <label for="dob" class="form-label">Date of Birth</label>
+              <input
+                type="date"
+                class="form-control"
+                id="dob"
+                name="dob"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- Step 2 - Address and Contact -->
+          <div class="wizard-step" id="step2" style="display: none">
+            <h5>Step 2: Address and Contact</h5>
+            <div class="mb-3">
+              <label for="residence" class="form-label">Residence</label>
+              <input
+                type="text"
+                class="form-control"
+                id="residence"
+                name="residence"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="parentInfo" class="form-label">Parent Info</label>
+              <textarea
+                class="form-control"
+                id="parentInfo"
+                name="parentInfo"
+                required
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Step 3 - Academic Information -->
+          <div class="wizard-step" id="step3" style="display: none">
+            <h5>Step 3: Academic Information</h5>
+            <div class="mb-3">
+              <label for="grade" class="form-label">Grade</label>
+              <select class="form-select" id="grade" name="grade" required>
+                <option value="" selected disabled>Select Grade</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Navigation Buttons -->
+          <div class="d-flex justify-content-between mt-3">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="prevStep"
+              style="display: none"
+            >
+              Previous
+            </button>
+            <button type="button" class="btn btn-primary" id="nextStep">
+              Next
+            </button>
+            <button type="submit" class="btn btn-primary d-none" id="submitBtn">
+              Add Student
+              <span
+                class="spinner-border spinner-border-sm d-none"
+                id="addStudentSpinner"
+                role="status"
+                aria-hidden="true"
+              ></span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit and Delete Modals for each Student -->
+{% for student in students %}
+<!-- Edit Student Modal -->
+<div
+  class="modal fade"
+  id="editStudentModal{{ student.id }}"
+  tabindex="-1"
+  aria-labelledby="editStudentModalLabel{{ student.id }}"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editStudentModalLabel{{ student.id }}">
+          Edit Student
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form id="editStudentForm{{ student.id }}" data-id="{{ student.id }}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="name{{ student.id }}" class="form-label"
+              >Full Name</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="name{{ student.id }}"
+              name="full_name"
+              value="{{ student.full_name }}"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="dob{{ student.id }}" class="form-label"
+              >Date of Birth</label
+            >
+            <input
+              type="date"
+              class="form-control"
+              id="dob{{ student.id }}"
+              name="dob"
+              value="{{ student.dob }}"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="residence{{ student.id }}" class="form-label"
+              >Residence</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="residence{{ student.id }}"
+              name="residence"
+              value="{{ student.residence }}"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="parentInfo{{ student.id }}" class="form-label"
+              >Parent Info</label
+            >
+            <textarea
+              class="form-control"
+              id="parentInfo{{ student.id }}"
+              name="parent_info"
+              required
+            >
+{{ student.parent_info }}</textarea
+            >
+          </div>
+          <div class="mb-3">
+            <label for="grade{{ student.id }}" class="form-label">Grade</label>
+            <select
+              class="form-select"
+              id="grade{{ student.id }}"
+              name="grade"
+              required
+            >
+              <option value="{{ student.grade }}" selected>
+                {{ student.grade }}
+              </option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Update Student</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Student Modal -->
+<div
+  class="modal fade"
+  id="deleteStudentModal{{ student.id }}"
+  tabindex="-1"
+  aria-labelledby="deleteStudentModalLabel{{ student.id }}"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteStudentModalLabel{{ student.id }}">
+          Delete Student
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete {{ student.full_name }}?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <form id="deleteStudentForm{{ student.id }}" data-id="{{ student.id }}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %} {% endblock %} {% block javascript %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Snackbar Functionality -->
+<script>
+  $(document).ready(function () {
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+    const csrftoken = getCookie("csrftoken");
+
+    function showSnackbar(message) {
+      const snackbar = $('<div class="snackbar"></div>').text(message);
+      $("body").append(snackbar);
+      snackbar.addClass("show");
+      setTimeout(function () {
+        snackbar.remove();
+      }, 3000);
+    }
+    $("#search").on("input", function () {
+      const query = $(this).val().toLowerCase(); // Convert to lowercase for case-insensitive comparison
+      $("tbody tr").each(function () {
+        const fullName = $(this).find("td:first").text().toLowerCase(); // Get the full name from the first column
+        // Check if the row should be visible based on the search query
+        $(this).toggle(fullName.includes(query));
+      });
+    });
+
+    // Add Student Form Submission
+    $("#addStudentForm").submit(function (e) {
+      e.preventDefault();
+      $("#addStudentSpinner").removeClass("d-none");
+
+      $.ajax({
+        type: "POST",
+        url: '{% url "add_student" %}',
+        data: $(this).serialize(),
+        headers: {
+          "X-CSRFToken": csrftoken,
+        },
+        success: function (response) {
+          $("#addStudentSpinner").addClass("d-none");
+          showSnackbar("Student added successfully!");
+          location.reload();
+        },
+        error: function (error) {
+          $("#addStudentSpinner").addClass("d-none");
+          showSnackbar("An error occurred. Please try again.");
+        },
+      });
+    });
+
+    // Edit Student Form Submission
+    $('form[id^="editStudentForm"]').submit(function (e) {
+      e.preventDefault();
+      let studentId = $(this).data("id");
+      $("#editStudentSpinner" + studentId).removeClass("d-none");
+
+      $.ajax({
+        type: "POST",
+        url: `/students/edit/${studentId}/`,
+        data: $(this).serialize(),
+        headers: {
+          "X-CSRFToken": csrftoken,
+        },
+        success: function (response) {
+          $("#editStudentSpinner" + studentId).addClass("d-none");
+          showSnackbar("Student updated successfully!");
+          location.reload();
+        },
+        error: function (error) {
+          $("#editStudentSpinner" + studentId).addClass("d-none");
+          showSnackbar("An error occurred. Please try again.");
+        },
+      });
+    });
+
+    // Delete Student Form Submission
+    $('form[id^="deleteStudentForm"]').submit(function (e) {
+      e.preventDefault();
+      let studentId = $(this).data("id");
+      $("#deleteStudentSpinner" + studentId).removeClass("d-none");
+
+      $.ajax({
+        type: "POST",
+        url: `/students/delete/${studentId}/`,
+        data: $(this).serialize(),
+        headers: {
+          "X-CSRFToken": csrftoken,
+        },
+        success: function (response) {
+          $("#deleteStudentSpinner" + studentId).addClass("d-none");
+          showSnackbar("Student deleted successfully!");
+          location.reload();
+        },
+        error: function (error) {
+          $("#deleteStudentSpinner" + studentId).addClass("d-none");
+          showSnackbar("An error occurred. Please try again.");
+        },
+      });
+    });
+  });
+
+  $(document).ready(function () {
+    let currentStep = 1;
+
+    function showStep(step) {
+      $(".wizard-step").hide();
+      $("#step" + step).show();
+      if (step === 1) {
+        $("#prevStep").hide();
+        $("#nextStep").show();
+        $("#submitBtn").addClass("d-none");
+      } else if (step === 3) {
+        $("#nextStep").hide();
+        $("#submitBtn").removeClass("d-none");
+      } else {
+        $("#prevStep").show();
+        $("#nextStep").show();
+        $("#submitBtn").addClass("d-none");
+      }
+    }
+
+    $("#nextStep").click(function () {
+      if (currentStep < 3) {
+        currentStep++;
+        showStep(currentStep);
+      }
+    });
+
+    $("#prevStep").click(function () {
+      if (currentStep > 1) {
+        currentStep--;
+        showStep(currentStep);
+      }
+    });
+
+    // Show initial step
+    showStep(currentStep);
+  });
+</script>
+
+<!-- Snackbar Styles -->
+<style>
+  .snackbar {
+    visibility: hidden;
+    min-width: 250px;
+    margin-left: -125px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 2px;
+    padding: 16px;
+    position: fixed;
+    z-index: 9999;
+    left: 50%;
+    bottom: 30px;
+    font-size: 17px;
+  }
+
+  .snackbar.show {
+    visibility: visible;
+    animation: fadein 0.5s, fadeout 0.5s 2.5s;
+  }
+
+  @keyframes fadein {
+    from {
+      bottom: 0;
+      opacity: 0;
+    }
+    to {
+      bottom: 30px;
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeout {
+    from {
+      bottom: 30px;
+      opacity: 1;
+    }
+    to {
+      bottom: 0;
+      opacity: 0;
+    }
+  }
+</style>
+{% endblock %}

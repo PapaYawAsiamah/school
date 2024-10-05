@@ -1,0 +1,221 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register</title>
+    {% load bootstrap5 %} {% bootstrap_css %} {% bootstrap_javascript %}
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+      }
+
+      /* Snackbar container */
+      .snackbar {
+        visibility: hidden;
+        min-width: 250px;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 5px;
+        padding: 16px;
+        position: fixed;
+        z-index: 1;
+        left: 30px; /* Positioned on the left */
+        bottom: 30px;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out, visibility 0.5s;
+      }
+
+      /* Show the snackbar */
+      .snackbar.show {
+        visibility: visible;
+        opacity: 1;
+      }
+
+      /* Button loading animation */
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .spinner-border {
+        display: none;
+        width: 1rem;
+        height: 1rem;
+        border-width: 0.2rem;
+      }
+
+      .btn.loading .spinner-border {
+        display: inline-block;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="vh-100">
+      <div class="container-fluid h-100">
+        <div class="row h-100">
+          <!-- Left Section -->
+          <div
+            class="col-sm-6 text-black d-flex justify-content-center align-items-center"
+          >
+            <div class="px-5 ms-xl-4 w-100" style="max-width: 400px">
+              <!-- Logo Section for Larger and Smaller Screens -->
+              <div class="d-flex align-items-center">
+                <i class="fas fa-crow fa-2x me-0" style="color: #709085"></i>
+                <span class="h1 fw-bold mb-0 d-none d-lg-inline">SMDPS</span>
+                <!-- Top Left for Large Screens -->
+              </div>
+
+              <div class="d-flex justify-content-center d-lg-none mt-4">
+                <i class="fas fa-crow fa-2x me-2" style="color: #709085"></i>
+                <span class="h1 fw-bold">SMDPS</span>
+                <!-- Centered for Small Screens -->
+              </div>
+
+              <!-- Registration Form -->
+              <h3 class="fw-normal mb-3 pb-3 mt-4" style="letter-spacing: 1px">
+                Register
+              </h3>
+
+              <!-- Snackbar for messages -->
+              {% if messages %}
+              <div id="snackbar" class="snackbar">
+                {% for message in messages %}
+                <p>{{ message }}</p>
+                {% endfor %}
+              </div>
+              {% endif %}
+
+              <form method="POST" action="/register" id="register-form">
+                {% csrf_token %}
+
+                <!-- Username Field -->
+                <div class="form-outline mb-4">
+                  <input
+                    type="text"
+                    id="username"
+                    class="form-control form-control-lg"
+                    name="username"
+                    required
+                  />
+                  <label class="form-label" for="username">Username</label>
+                </div>
+
+                <!-- Email Field -->
+                <div class="form-outline mb-4">
+                  <input
+                    type="email"
+                    id="email"
+                    class="form-control form-control-lg"
+                    name="email"
+                    required
+                  />
+                  <label class="form-label" for="email">Email Address</label>
+                </div>
+
+                <!-- Password Field -->
+                <div class="form-outline mb-4">
+                  <input
+                    type="password"
+                    id="password1"
+                    class="form-control form-control-lg"
+                    name="password1"
+                    required
+                  />
+                  <label class="form-label" for="password1">Password</label>
+                </div>
+
+                <!-- Confirm Password Field -->
+                <div class="form-outline mb-4">
+                  <input
+                    type="password"
+                    id="password2"
+                    class="form-control form-control-lg"
+                    name="password2"
+                    required
+                  />
+                  <label class="form-label" for="password2"
+                    >Confirm Password</label
+                  >
+                </div>
+
+                <!-- Register Button -->
+                <div class="pt-1 mb-4">
+                  <button
+                    id="register-btn"
+                    class="btn btn-info btn-lg btn-block"
+                    type="submit"
+                  >
+                    <span
+                      class="spinner-border"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                    <span class="button-text">Register</span>
+                  </button>
+                </div>
+
+                <!-- Additional Links -->
+                <p>
+                  Already have an account?
+                  <a href="/" class="link-info">Login here</a>
+                </p>
+              </form>
+            </div>
+          </div>
+
+          <!-- Right Section with Image -->
+          <div class="col-sm-6 px-0 d-none d-sm-block">
+            <img
+              src="{% static 'images/school.jpg' %}"
+              alt="Registration image"
+              class="w-100 vh-100"
+              style="object-fit: cover; object-position: left"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      // Function to show the snackbar
+      function showSnackbar() {
+        var snackbar = document.getElementById("snackbar");
+        if (snackbar) {
+          snackbar.classList.add("show");
+          // Hide snackbar after 3 seconds
+          setTimeout(function () {
+            snackbar.classList.remove("show");
+          }, 3000);
+        }
+      }
+
+      // Function to handle form submission with loading state
+      document
+        .getElementById("register-form")
+        .addEventListener("submit", function (event) {
+          var registerButton = document.getElementById("register-btn");
+          var buttonText = document.querySelector(".button-text");
+          var spinner = document.querySelector(".spinner-border");
+
+          // Disable the button and show loading state
+          registerButton.classList.add("loading");
+          registerButton.disabled = true;
+          buttonText.style.display = "none";
+          spinner.style.display = "inline-block";
+        });
+
+      // Trigger the snackbar if messages are present
+      window.onload = function () {
+        showSnackbar();
+      };
+    </script>
+  </body>
+</html>
